@@ -7,8 +7,10 @@ I wrapped the stuff in a small Qt dialog. Now I don't need to get out of bed to 
 
 # Compile and run
 
-mkdir build<br>
-cd build<br>
-cmake ..<br>
-make<br>
+```bash
+mkdir build
+cd build
+cmake ..
+make
 ./OnkyoRemote
+```

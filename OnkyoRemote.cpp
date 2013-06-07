@@ -77,11 +77,15 @@ OnkyoRemote::OnkyoRemote() {
   /*
    *  Display
    */
-  displayText = new QLabel("Standby");
+  displayText = new QLabel("No value yet");
   displayText->setAlignment(Qt::AlignCenter);
+
+  presetText = new QLabel("No value yet");
+  presetText->setAlignment(Qt::AlignCenter);
 
   QHBoxLayout *displayLayout = new QHBoxLayout;
   displayLayout->addWidget(displayText);
+  displayLayout->addWidget(presetText);
 
   /*
    *  Layouts
@@ -99,6 +103,7 @@ OnkyoRemote::OnkyoRemote() {
 
   network = new Network(this);
   connect(network, SIGNAL(setDisplay(const QString &)), this, SLOT(setDisplay(const QString &)));
+  connect(network, SIGNAL(setPreset(const QString &)), this, SLOT(setPreset(const QString &)));
   connect(network, SIGNAL(setVolume(int)), this, SLOT(setVolume(int)));
 
   network->discover();
@@ -128,6 +133,7 @@ void OnkyoRemote::connected() {
   connectBtn->setText(QString("Connected to %1, at %2").arg(network->getDevice()->model).arg(network->getDevice()->addr.toString()));
   connectBtn->setPalette(QPalette(Qt::green));
   querySelector();
+  queryVolume();
 }
 
 void OnkyoRemote::querySelector() {
@@ -186,6 +192,10 @@ void OnkyoRemote::spotify() {
 
 void OnkyoRemote::setDisplay(const QString& text) {
   displayText->setText(text);
+}
+
+void OnkyoRemote::setPreset(const QString& text) {
+  presetText->setText(text);
 }
 
 void OnkyoRemote::setVolume(int value) {

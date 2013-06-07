@@ -17,6 +17,7 @@ class OnkyoRemote : public QMainWindow {
   public slots:
     void setVolume(int);
     void volumeSliderMoved(int);
+    void setPreset(const QString &);
     void setDisplay(const QString &);
     void connected();
     void disconnected();
@@ -36,6 +37,7 @@ class OnkyoRemote : public QMainWindow {
     Network* network;
     QPushButton *connectBtn;
     QLabel *displayText;
+    QLabel *presetText;
     QSlider *volumeSlider;
 };
 

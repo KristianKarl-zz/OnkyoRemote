@@ -144,6 +144,8 @@ void Network::parseStatus(QString status) {
 
     case 24:
       emit setDisplay("Tuner");
+      command("TUNQSTN");
+      command("PRSQSTN");
       break;
 
     case 28:
@@ -157,7 +159,14 @@ void Network::parseStatus(QString status) {
   rx = QRegExp("^TUN(\\d+)");
 
   if (rx.indexIn(status) == 0) {
-    emit setDisplay("Tuner: FM" + rx.cap(1));
+    emit setDisplay("Tuner FM " + rx.cap(1));
+    return;
+  }
+
+  rx = QRegExp("^PRS(\\d+)");
+
+  if (rx.indexIn(status) == 0) {
+    emit setPreset(QString("Preset: %1").arg( rx.cap(1).toInt()));
     return;
   }
 

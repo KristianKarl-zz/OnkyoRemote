@@ -22,6 +22,7 @@ class Network : public QObject {
     }
   signals:
     void setDisplay(const QString &);
+    void setPreset(const QString &);
     void setVolume(int);
   public slots:
     void command(const QString& cmd);

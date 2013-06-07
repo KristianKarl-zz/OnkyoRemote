@@ -1,73 +1,143 @@
 #include "Network.h"
 
 #include <QHostAddress>
+#include "iscpmessage.h"
 #include <arpa/inet.h>
 
-Network::Network(QObject* parent): QObject(parent)
-{
-    connect(&client, SIGNAL(connected()), parent, SLOT(connected()));
-    connect(&client, SIGNAL(disconnected()), parent, SLOT(disconnected()));
-}
+Network::Network(QObject* parent): QObject(parent) {
+  connect(&tcp, SIGNAL(connected()), parent, SLOT(connected()));
+  connect(&tcp, SIGNAL(disconnected()), parent, SLOT(disconnected()));
+  connect(&tcp, SIGNAL(readyRead()), this, SLOT(readData()));
 
-Network::~Network()
-{
-    client.close();
-}
-
-void Network::start(QString address, quint16 port)
-{
-    QHostAddress addr(address);
-    client.connectToHost(addr, port);
-}
-
-void Network::transfer(const QString& cmd, const QString& parameter)
-{
-    int result = 0;
-    char *buffer_p = NULL;
-    unsigned int bufferSize = 0;
-    struct ISCP::MSG *msg_p;
-
-    bufferSize = sizeof(*msg_p) + parameter.length() + 2;
-    buffer_p = (char*)calloc(1, bufferSize);
-
-    if (!buffer_p)
-    {
-        return;
+  hostAddress.append(QHostAddress("127.0.0.1"));
+  foreach (const QHostAddress & address, QNetworkInterface::allAddresses()) {
+    if (address.protocol() == QAbstractSocket::IPv4Protocol && address != QHostAddress(QHostAddress::LocalHost)) {
+      qDebug() <<  __PRETTY_FUNCTION__ << "Localhost: " << address.toString();
+      hostAddress.append(address);
     }
-
-    msg_p = (struct ISCP::MSG *) buffer_p;
-
-    memcpy(msg_p->header.id, "ISCP", 4);
-    msg_p->header.headerSize = htonl(sizeof(msg_p->header));
-    msg_p->header.dataSize = htonl(sizeof(msg_p->data) +
-                                   parameter.length() +
-                                   1);
-    msg_p->header.version = 1;
-
-    msg_p->data.start = (uint8_t) '!';
-    msg_p->data.dest = (uint8_t) '1';
-    memcpy(msg_p->data.cmd, cmd.toStdString().c_str(), sizeof(msg_p->data.cmd));
-    sprintf(msg_p->data.param,
-            "%s\r\n",
-            parameter.toStdString().c_str());
-
-    result = client.write(buffer_p, bufferSize);
-    qDebug() << "Result: " << result;
-
-    free(buffer_p);
-
+  }
 }
 
-bool Network::isConnected()
-{
-    return client.isOpen();
+Network::~Network() {
+  disconnect();
+  tcp.close();
 }
 
-void Network::disconnect()
-{
-    client.disconnectFromHost();
+void Network::readData() {
+  QDataStream in(&tcp);
+
+  if (curr_status.isNull()) {
+    if (tcp.bytesAvailable() < IscpMessage::header_size)
+      return;
+
+    char header[ IscpMessage::header_size ];
+    in.readRawData(&header[0], IscpMessage::header_size);
+    //check format
+    if (
+      header[0] != 'I'
+      || header[1] != 'S'
+      || header[2] != 'C'
+      || header[3] != 'P'
+    ) {
+      curr_status.reset(0);
+      tcp.abort();
+      qDebug() <<  __PRETTY_FUNCTION__ << "Bad ISCP format message";
+      return;
+    }
+    quint32 dataSize = qFromBigEndian<qint32>(reinterpret_cast<uchar*>(&header[8]));
+
+    curr_status.reset(new IscpMessage(dataSize));
+    curr_status->bytes().prepend(header, sizeof(header));
+  }
+
+  if (tcp.bytesAvailable() < curr_status->message_size())
+    return;
+  //else get data message
+
+  in.readRawData(curr_status->message(), curr_status->message_size()) ;
+  qDebug() <<  __PRETTY_FUNCTION__ << "Received message: " << curr_status->toString();
+  parseStatus( curr_status->toString() );
+  curr_status.reset(0);
 }
 
+void Network::discover() {
+  QScopedPointer<QUdpSocket> broadcastSocket(new QUdpSocket());
+  broadcastSocket->bind(QHostAddress::Any, 60128);
+
+  // send broadcast query on all interfaces
+  qDebug() << __PRETTY_FUNCTION__ << "Sending broadcast query on all interfaces";
+  IscpMessage qry;
+  qry.make_rawcommand("!xECNQSTN");
+  QList<QNetworkInterface>    infs =  QNetworkInterface::allInterfaces();
+  foreach (QNetworkInterface interface, infs) {
+    foreach (QNetworkAddressEntry entry, interface.addressEntries()) {
+      if (!entry.broadcast().isNull()) {
+        broadcastSocket->writeDatagram(qry.bytes(), entry.broadcast(), 60128);
+        qDebug() <<  __PRETTY_FUNCTION__ << "Broadcasting to " << entry.broadcast().toString();
+      }
+    }
+  }
+
+  // wait and read response
+  while (broadcastSocket->waitForReadyRead(1000)) {
+    while (broadcastSocket->hasPendingDatagrams())  {
+      dev.info.bytes().resize(broadcastSocket->pendingDatagramSize());
+      broadcastSocket->readDatagram(dev.info.bytes().data(), dev.info.bytes().size(), &dev.addr, &dev.port);
+      qDebug() << __PRETTY_FUNCTION__ << dev.addr.toString();
+      if (!hostAddress.contains(dev.addr) && dev.info.isEISCP()) {
+        qDebug() << __PRETTY_FUNCTION__ << "Found Onkyo device on: " + dev.addr.toString();
+        qDebug() << __PRETTY_FUNCTION__ << dev.toString();
+        start();
+      }
+    }
+  }
+}
+
+void Network::start() {
+  qDebug() << __PRETTY_FUNCTION__ << "Will connect to: " << dev.addr.toString() << ":" << ISCP_PORT;
+  tcp.connectToHost(dev.addr, ISCP_PORT);
+}
+
+bool Network::isConnected() {
+  return tcp.isOpen();
+}
+
+void Network::disconnect() {
+  qDebug() << __PRETTY_FUNCTION__ << "Will disconnect from: " << dev.addr.toString() << ":" << ISCP_PORT;
+  tcp.disconnectFromHost();
+}
+
+void Network::command(const QString& cmd) {
+  IscpMessage msg;
+  tcp.write(msg.make_command(cmd));
+}
+
+void Network::parseStatus(QString status) {
+  QRegExp rx("^SLI(\\d+)");
+  if ( rx.indexIn(status) == 0 ) {
+    switch ( rx.cap(1).toInt() ) {
+      case 01:
+        emit setDisplay("Cable/Satelite");
+        break;
+      case 02:
+        emit setDisplay("Game/TV");
+        break;
+      case 24:
+        emit setDisplay("Tuner");
+        break;
+      case 28:
+        emit setDisplay("Spotify");
+        break;
+    }
+    return;
+  }
+  rx = QRegExp("^TUN(\\d+)");
+  if ( rx.indexIn(status) == 0 ) {
+    emit setDisplay( "Tuner: FM" + rx.cap(1));
+    return;
+  }
+}
 
 
 #include "Network.moc"
+

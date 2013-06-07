@@ -5,17 +5,19 @@
 
 class Network;
 class QPushButton;
+class QLabel;
 
-class OnkyoRemote : public QMainWindow
-{
-Q_OBJECT
-public:
+class OnkyoRemote : public QMainWindow {
+    Q_OBJECT
+  public:
     OnkyoRemote();
     virtual ~OnkyoRemote();
 
-public slots:
+  public slots:
+    void setDisplay(const QString &);
     void connected();
     void disconnected();
+    void querySelector();
     void changeConnectionStatus();
     void volumeUp();
     void volumeDown();
@@ -23,10 +25,13 @@ public slots:
     void game();
     void radio();
     void spotify();
+    void radioUp();
+    void radioDown();
 
-private:
-  Network* network;
-  QPushButton *connectBtn;
+  private:
+    Network* network;
+    QPushButton *connectBtn;
+    QLabel *displayText;
 };
 
 #endif // OnkyoRemote_H

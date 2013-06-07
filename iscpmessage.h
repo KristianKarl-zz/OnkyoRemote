@@ -24,11 +24,11 @@ class IscpMessage {
     }
 
     const char*  message() const {
-      return block.size() == 0 ? 0 : &block.constData()[ header_size ];
+      return block.size() == 0 ? 0 : &block.constData() [ header_size ];
     }
 
     char*  message() {
-      return block.size() == 0 ? 0 : &block.data()[header_size];
+      return block.size() == 0 ? 0 : &block.data() [header_size];
     }
 
     void  make_rawcommand(const QString &cmd);

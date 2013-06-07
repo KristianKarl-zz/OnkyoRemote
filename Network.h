@@ -13,15 +13,19 @@ class Network : public QObject {
   public:
     explicit Network(QObject* parent = 0);
     ~Network();
-    void discover();
+    bool discover();
     void start();
     bool isConnected();
     void disconnect();
-signals:
+    DeviceInfo* getDevice() {
+      return &dev;
+    }
+  signals:
     void setDisplay(const QString &);
-public slots:
+    void setVolume(int);
+  public slots:
     void command(const QString& cmd);
-    void readData();
+    QString readData();
   private:
     void parseStatus(QString status);
   private:

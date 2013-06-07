@@ -6,6 +6,7 @@
 class Network;
 class QPushButton;
 class QLabel;
+class QSlider;
 
 class OnkyoRemote : public QMainWindow {
     Q_OBJECT
@@ -14,10 +15,13 @@ class OnkyoRemote : public QMainWindow {
     virtual ~OnkyoRemote();
 
   public slots:
+    void setVolume(int);
+    void volumeSliderMoved(int);
     void setDisplay(const QString &);
     void connected();
     void disconnected();
     void querySelector();
+    void queryVolume();
     void changeConnectionStatus();
     void volumeUp();
     void volumeDown();
@@ -32,6 +36,7 @@ class OnkyoRemote : public QMainWindow {
     Network* network;
     QPushButton *connectBtn;
     QLabel *displayText;
+    QSlider *volumeSlider;
 };
 
 #endif // OnkyoRemote_H

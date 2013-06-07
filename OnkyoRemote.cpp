@@ -2,6 +2,7 @@
 
 #include <QtGui/QLabel>
 #include <QtGui/QPushButton>
+#include <QtGui/QSlider>
 #include <QtGui/QHBoxLayout>
 
 #include "Network.h"
@@ -27,11 +28,16 @@ OnkyoRemote::OnkyoRemote() {
   QPushButton *volumeUp = new QPushButton("Volume Up");
   connect(volumeUp, SIGNAL(clicked()), this, SLOT(volumeUp()));
 
+  volumeSlider = new QSlider(Qt::Horizontal);
+  volumeSlider->setTickInterval(100);
+  connect(volumeSlider, SIGNAL(sliderMoved(int)), this, SLOT(volumeSliderMoved(int)));
+
   QPushButton *volumeDown = new QPushButton("Volume Down");
   connect(volumeDown, SIGNAL(clicked()), this, SLOT(volumeDown()));
 
   QHBoxLayout *volumeLayout = new QHBoxLayout;
   volumeLayout->addWidget(volumeDown);
+  volumeLayout->addWidget(volumeSlider);
   volumeLayout->addWidget(volumeUp);
 
   /*
@@ -93,6 +99,8 @@ OnkyoRemote::OnkyoRemote() {
 
   network = new Network(this);
   connect(network, SIGNAL(setDisplay(const QString &)), this, SLOT(setDisplay(const QString &)));
+  connect(network, SIGNAL(setVolume(int)), this, SLOT(setVolume(int)));
+
   network->discover();
 }
 
@@ -117,13 +125,17 @@ void OnkyoRemote::radioDown() {
 }
 
 void OnkyoRemote::connected() {
-  connectBtn->setText(CONNECTED_STRING);
+  connectBtn->setText(QString("Connected to %1, at %2").arg(network->getDevice()->model).arg(network->getDevice()->addr.toString()));
   connectBtn->setPalette(QPalette(Qt::green));
   querySelector();
 }
 
 void OnkyoRemote::querySelector() {
   network->command("SLIQSTN");
+}
+
+void OnkyoRemote::queryVolume() {
+  network->command("MVLQSTN");
 }
 
 void OnkyoRemote::disconnected() {
@@ -133,6 +145,7 @@ void OnkyoRemote::disconnected() {
 
 void OnkyoRemote::changeConnectionStatus() {
   qDebug() << __PRETTY_FUNCTION__ << "Text: " << connectBtn->text();
+
   if (!network->isConnected()) {
     network->discover();
     connectBtn->setText(CONNECTING_STRING);
@@ -163,14 +176,26 @@ void OnkyoRemote::radio() {
 void OnkyoRemote::spotify() {
   network->command("SLI28");
   QTime dieTime = QTime::currentTime().addSecs(10);
+
   while (QTime::currentTime() < dieTime)
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+
   network->command("NSV0A");
   querySelector();
 }
 
 void OnkyoRemote::setDisplay(const QString& text) {
   displayText->setText(text);
+}
+
+void OnkyoRemote::setVolume(int value) {
+  qDebug() << __PRETTY_FUNCTION__ << "value: " << value;
+  volumeSlider->setValue(value);
+}
+
+void OnkyoRemote::volumeSliderMoved(int value) {
+  qDebug() << __PRETTY_FUNCTION__ << "value: " << value;
+  network->command(QString("MVL%1").arg(QString::number(value, 16)));
 }
 
 #include "OnkyoRemote.moc"

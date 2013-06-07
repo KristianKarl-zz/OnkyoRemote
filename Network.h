@@ -6,7 +6,6 @@
 #include <QString>
 #include <QTcpSocket>
 
-#include "ISCP.h"
 #include "deviceinfo.h"
 
 class Network : public QObject {

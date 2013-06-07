@@ -5,7 +5,6 @@
 #include <QtGui/QHBoxLayout>
 
 #include "Network.h"
-#include "ISCP.h"
 
 #define CONNECT_STRING "Connect"
 #define CONNECTING_STRING "Connecting"

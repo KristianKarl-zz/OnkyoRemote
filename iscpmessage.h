@@ -3,6 +3,8 @@
 
 #include <QByteArray>
 
+#define ISCP_PORT 60128
+
 class IscpMessage {
   public:
     static const int header_size;

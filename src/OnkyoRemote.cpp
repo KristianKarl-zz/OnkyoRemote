@@ -85,18 +85,24 @@ OnkyoRemote::OnkyoRemote() :
   spotifyBtn->setCheckable(true);
   connect(spotifyBtn, SIGNAL(clicked()), this, SLOT(spotify()));
 
+  pcBtn = new QPushButton("PC");
+  pcBtn->setCheckable(true);
+  connect(pcBtn, SIGNAL(clicked()), this, SLOT(pc()));
+
   QButtonGroup *btnGroup = new QButtonGroup();
   btnGroup->setExclusive(true);
   btnGroup->addButton(gameBtn);
   btnGroup->addButton(cblSatBtn);
   btnGroup->addButton(radioBtn);
   btnGroup->addButton(spotifyBtn);
+  btnGroup->addButton(pcBtn);
 
   QHBoxLayout *inputSelectorLayout = new QHBoxLayout;
   inputSelectorLayout->addWidget(gameBtn);
   inputSelectorLayout->addWidget(cblSatBtn);
   inputSelectorLayout->addWidget(radioBtn);
   inputSelectorLayout->addWidget(spotifyBtn);
+  inputSelectorLayout->addWidget(pcBtn);
 
   /*
    *  Radio
@@ -231,6 +237,11 @@ void OnkyoRemote::spotify() {
     QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 
   network->command("NSV0A");
+}
+
+void OnkyoRemote::pc() {
+  qDebug() <<  __PRETTY_FUNCTION__;
+  network->command("SLI05");
 }
 
 void OnkyoRemote::setDisplay(const QString& text) {

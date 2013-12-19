@@ -1,6 +1,7 @@
 #include "iscpmessage.h"
 #include "QString"
 #include "QDataStream"
+#include <QtDebug>
 
 
 const int IscpMessage::header_size = 16;
@@ -27,6 +28,8 @@ QString IscpMessage::toString() const {
 }
 
 void IscpMessage::make_rawcommand(const QString &cmd) {
+  qDebug() <<  __PRETTY_FUNCTION__;
+
   QByteArray req = cmd.toUtf8();
 
   block.clear();

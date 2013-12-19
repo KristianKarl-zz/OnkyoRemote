@@ -34,6 +34,7 @@ class OnkyoRemote : public QMainWindow {
     void game();
     void radio();
     void spotify();
+    void pc();
     void radioUp();
     void radioDown();
 
@@ -53,6 +54,7 @@ class OnkyoRemote : public QMainWindow {
     QPushButton *gameBtn;
     QPushButton *radioBtn;
     QPushButton *spotifyBtn;
+    QPushButton *pcBtn;
 
     // Status
   private:

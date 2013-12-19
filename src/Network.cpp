@@ -10,6 +10,9 @@ Network::Network(QObject* parent) : QObject(parent) {
   connect(&tcp, SIGNAL(disconnected()), parent, SLOT(disconnected()));
   connect(&tcp, SIGNAL(readyRead()), this, SLOT(readData()));
 
+  broadcastSocket.bind(QHostAddress::Any, 60128, QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint);
+  connect(&broadcastSocket, SIGNAL(readyRead()), this, SLOT(readBroadcastDatagram()));
+  
   hostAddress.append(QHostAddress("127.0.0.1"));
 
   foreach (const QHostAddress & address, QNetworkInterface::allAddresses()) {
@@ -71,12 +74,6 @@ QString Network::readData() {
 
 bool Network::discover() {
   qDebug() <<  __PRETTY_FUNCTION__;
-
-  QScopedPointer<QUdpSocket> broadcastSocket(new QUdpSocket());
-  broadcastSocket->bind(QHostAddress::Any, 60128);
-
-  // send broadcast query on all interfaces
-  qDebug() << __PRETTY_FUNCTION__ << "Sending broadcast query on all interfaces";
   IscpMessage qry;
   qry.make_rawcommand("!xECNQSTN");
   QList<QNetworkInterface>    infs =  QNetworkInterface::allInterfaces();
@@ -84,31 +81,31 @@ bool Network::discover() {
   foreach (QNetworkInterface interface, infs) {
     foreach (QNetworkAddressEntry entry, interface.addressEntries()) {
       if (!entry.broadcast().isNull() && entry.ip() != QHostAddress("127.0.0.1")) {
-        broadcastSocket->writeDatagram(qry.bytes(), entry.broadcast(), 60128);
+        broadcastSocket.writeDatagram(qry.bytes(), qry.bytes().size(), QHostAddress::Broadcast, 60128);
         qDebug() <<  __PRETTY_FUNCTION__ << "Broadcasting to " << entry.broadcast().toString();
       }
     }
   }
+}
+  
+void Network::readBroadcastDatagram() {
+  qDebug() <<  __PRETTY_FUNCTION__;
+  while (broadcastSocket.hasPendingDatagrams())  {
+    dev.info.bytes().resize(broadcastSocket.pendingDatagramSize());
+    broadcastSocket.readDatagram(dev.info.bytes().data(), dev.info.bytes().size(), &dev.addr, &dev.port);
+    qDebug() << __PRETTY_FUNCTION__ << "Evaluating response from: " << dev.addr.toString();
+    qDebug() << __PRETTY_FUNCTION__ << "Information: " + dev.toString();
 
-  // wait and read response
-  while (broadcastSocket->waitForReadyRead(1000)) {
-    while (broadcastSocket->hasPendingDatagrams())  {
-      dev.info.bytes().resize(broadcastSocket->pendingDatagramSize());
-      broadcastSocket->readDatagram(dev.info.bytes().data(), dev.info.bytes().size(), &dev.addr, &dev.port);
-      qDebug() << __PRETTY_FUNCTION__ << "Evaluating response from: " << dev.addr.toString();
-
-      if (!hostAddress.contains(dev.addr) && dev.info.isEISCP()) {
-        qDebug() << __PRETTY_FUNCTION__ << "Found Onkyo device on: " + dev.addr.toString();
-        qDebug() << __PRETTY_FUNCTION__ << "Information: " + dev.toString();
-        start();
-        return true;
-      }
-
-      dev.clear();
+    if (!hostAddress.contains(dev.addr) && dev.info.isEISCP()) {
+      qDebug() << __PRETTY_FUNCTION__ << "Found Onkyo device on: " + dev.addr.toString();
+      qDebug() << __PRETTY_FUNCTION__ << "Information: " + dev.toString();
+      start();
+      return;
     }
-  }
 
-  return false;
+    dev.clear();
+  }
+  qDebug() << __PRETTY_FUNCTION__ << "Done, nothing recieved";
 }
 
 void Network::start() {

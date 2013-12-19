@@ -16,3 +16,10 @@ cmake ..
 make
 ./OnkyoRemote
 ```
+
+# Firewall
+On a Fedora machine
+```bash
+sudo iptables -I INPUT -p udp --dport 60128 -j ACCEPT
+sudo service iptables save
+```

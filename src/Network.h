@@ -25,11 +25,13 @@ class Network : public QObject {
   public slots:
     void command(const QString& cmd);
     QString readData();
+    void readBroadcastDatagram();
   private:
     QList<QHostAddress> hostAddress;
     QScopedPointer<IscpMessage> curr_status;
     DeviceInfo  dev;
     QTcpSocket tcp;
+    QUdpSocket broadcastSocket;
 };
 
 #endif // NETWORK_H

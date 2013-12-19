@@ -31,6 +31,3 @@ QString DeviceInfo::toString() {
 
   return model;
 }
-
-
-#include "deviceinfo.moc"

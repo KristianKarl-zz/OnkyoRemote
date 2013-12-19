@@ -2,10 +2,13 @@ project(OnkyoRemote)
 cmake_minimum_required(VERSION 2.6)
 find_package(Qt4 REQUIRED)
 
+FILE(GLOB_RECURSE SOURCE_FILES src/*.cpp)
+FILE(GLOB_RECURSE MOC_HDR_FILES src/*.h)
+
 include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR})
 
-set(OnkyoRemote_SRCS iscpmessage.cpp deviceinfo.cpp Network.cpp OnkyoRemote.cpp main.cpp)
-qt4_automoc(${OnkyoRemote_SRCS})
-add_executable(OnkyoRemote ${OnkyoRemote_SRCS})
+QT4_WRAP_CPP( MOC_SOURCE_FILES ${MOC_HDR_FILES} )
+
+add_executable(OnkyoRemote ${SOURCE_FILES} ${MOC_SOURCE_FILES})
 target_link_libraries(OnkyoRemote ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTNETWORK_LIBRARY})
-install(TARGETS OnkyoRemote RUNTIME DESTINATION bin)
+

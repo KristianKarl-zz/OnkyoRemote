@@ -21,14 +21,10 @@ class Network : public QObject {
       return &dev;
     }
   signals:
-    void setDisplay(const QString &);
-    void setPreset(const QString &);
-    void setVolume(int);
+    void filterMessage(QString);
   public slots:
     void command(const QString& cmd);
     QString readData();
-  private:
-    void parseStatus(QString status);
   private:
     QList<QHostAddress> hostAddress;
     QScopedPointer<IscpMessage> curr_status;

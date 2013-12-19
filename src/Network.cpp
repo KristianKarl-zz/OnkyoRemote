@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 
 Network::Network(QObject* parent) : QObject(parent) {
+  qDebug() <<  __PRETTY_FUNCTION__;
   connect(&tcp, SIGNAL(connected()), parent, SLOT(connected()));
   connect(&tcp, SIGNAL(disconnected()), parent, SLOT(disconnected()));
   connect(&tcp, SIGNAL(readyRead()), this, SLOT(readData()));
@@ -20,11 +21,13 @@ Network::Network(QObject* parent) : QObject(parent) {
 }
 
 Network::~Network() {
+  qDebug() <<  __PRETTY_FUNCTION__;
   disconnect();
   tcp.close();
 }
 
 QString Network::readData() {
+  qDebug() <<  __PRETTY_FUNCTION__;
   QDataStream in(&tcp);
 
   if (curr_status.isNull()) {
@@ -62,11 +65,13 @@ QString Network::readData() {
   qDebug() <<  __PRETTY_FUNCTION__ << "Received message: " << curr_status->toString();
   QString tmp = curr_status->toString();
   curr_status.reset(0);
-  parseStatus(tmp);
+  emit filterMessage(tmp);
   return tmp;
 }
 
 bool Network::discover() {
+  qDebug() <<  __PRETTY_FUNCTION__;
+
   QScopedPointer<QUdpSocket> broadcastSocket(new QUdpSocket());
   broadcastSocket->bind(QHostAddress::Any, 60128);
 
@@ -112,6 +117,7 @@ void Network::start() {
 }
 
 bool Network::isConnected() {
+  qDebug() <<  __PRETTY_FUNCTION__;
   return tcp.isOpen();
 }
 
@@ -128,57 +134,3 @@ void Network::command(const QString& cmd) {
   IscpMessage msg;
   tcp.write(msg.make_command(cmd));
 }
-
-void Network::parseStatus(QString status) {
-  QRegExp rx("^SLI(\\d+)");
-
-  if (rx.indexIn(status) == 0) {
-    switch (rx.cap(1).toInt()) {
-    case 01:
-      emit setDisplay("Cable/Satelite");
-      break;
-
-    case 02:
-      emit setDisplay("Game/TV");
-      break;
-
-    case 24:
-      emit setDisplay("Tuner");
-      command("TUNQSTN");
-      command("PRSQSTN");
-      break;
-
-    case 28:
-      emit setDisplay("Spotify");
-      break;
-    }
-
-    return;
-  }
-
-  rx = QRegExp("^TUN(\\d+)");
-
-  if (rx.indexIn(status) == 0) {
-    emit setDisplay("Tuner FM " + rx.cap(1));
-    return;
-  }
-
-  rx = QRegExp("^PRS(\\d+)");
-
-  if (rx.indexIn(status) == 0) {
-    emit setPreset(QString("Preset: %1").arg( rx.cap(1).toInt()));
-    return;
-  }
-
-  rx = QRegExp("^MVL([A-F0-9]+)");
-
-  if (rx.indexIn(status) == 0) {
-    bool ok;
-    emit setVolume(rx.cap(1).toInt(&ok, 16));
-    return;
-  }
-}
-
-
-#include "Network.moc"
-

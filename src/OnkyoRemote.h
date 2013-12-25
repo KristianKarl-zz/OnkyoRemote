@@ -25,6 +25,10 @@ class OnkyoRemote : public QMainWindow {
     void volumeSliderMoved(int);
     void setPreset(const QString &);
     void setDisplay(const QString &);
+
+    /*
+     * Called when the tcp socket in Network connects with the receiver.
+     */
     void connected();
     void disconnected();
     void changeConnectionStatus();

@@ -36,6 +36,8 @@ OnkyoRemote::OnkyoRemote() :
   playListSelected(0),
   lastListName("") {
   qDebug() <<  __PRETTY_FUNCTION__;
+  
+  setWindowIcon(QIcon(":/img/onkyo.png"));
 
   initListView();
 
@@ -390,7 +392,9 @@ void OnkyoRemote::handlePlayList(QString string) {
     bool ok;
     QString name = string.right(22);
     int listlength = QStringRef(&string, 8, 12).string()->toInt(&ok, 16);
-    if (listlength == 0);
+    if (listlength == 0) {
+      ;
+    }
 
     int listcursorpos = QStringRef(&string, 4, 8).string()->toInt(&ok, 16);
     int listStartAt = listcursorpos / 10 * 10;

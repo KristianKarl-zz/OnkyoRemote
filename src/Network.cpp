@@ -72,7 +72,7 @@ QString Network::readData() {
   return tmp;
 }
 
-bool Network::discover() {
+void Network::discover() {
   qDebug() <<  __PRETTY_FUNCTION__;
   IscpMessage qry;
   qry.make_rawcommand("!xECNQSTN");

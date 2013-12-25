@@ -13,7 +13,7 @@ class Network : public QObject {
   public:
     explicit Network(QObject* parent = 0);
     ~Network();
-    bool discover();
+    void discover();
     void start();
     bool isConnected();
     void disconnect();

@@ -274,8 +274,6 @@ void OnkyoRemote::getInitialStatus() {
   network->command("SLIQSTN");
   // ask for muted
   network->command("AMTQSTN");
-  // send input nothing to get N/A response
-  network->command("SLI");
   // ask for music optimizer
   network->command("MOTQSTN");
 }

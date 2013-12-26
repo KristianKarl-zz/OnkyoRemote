@@ -25,6 +25,8 @@ class OnkyoRemote : public QMainWindow {
     void volumeSliderMoved(int);
     void setPreset(const QString &);
     void setDisplay(const QString &);
+    void setTemporaryDisplay(const QString &);
+    void restoreDisplayText();
 
     /*
      * Called when the tcp socket in Network connects with the receiver.
@@ -82,6 +84,8 @@ class OnkyoRemote : public QMainWindow {
     int currentPlaylist;
     int playListSelected;
     QString lastListName;
+    QString originalDisplayText;
+    QTimer *temporaryDisplayTextTimer;
 };
 
 #endif // OnkyoRemote_H

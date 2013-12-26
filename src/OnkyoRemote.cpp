@@ -38,6 +38,9 @@ OnkyoRemote::OnkyoRemote() :
   qDebug() <<  __PRETTY_FUNCTION__;
   
   setWindowIcon(QIcon(":/img/onkyo.png"));
+  
+  temporaryDisplayTextTimer = new QTimer(this);
+  connect(temporaryDisplayTextTimer, SIGNAL(timeout()), this, SLOT(restoreDisplayText()));
 
   initListView();
 
@@ -249,6 +252,19 @@ void OnkyoRemote::pc() {
 void OnkyoRemote::setDisplay(const QString& text) {
   qDebug() <<  __PRETTY_FUNCTION__ << text;
   displayText->setText(text);
+  originalDisplayText = text;
+}
+
+void OnkyoRemote::setTemporaryDisplay(const QString& text) {
+  qDebug() <<  __PRETTY_FUNCTION__ << text;
+  displayText->setText(text);
+  temporaryDisplayTextTimer->start(1000);
+}
+
+void OnkyoRemote::restoreDisplayText() {
+  qDebug() <<  __PRETTY_FUNCTION__;
+  displayText->setText(originalDisplayText);
+  temporaryDisplayTextTimer->stop();
 }
 
 void OnkyoRemote::setPreset(const QString& text) {
@@ -260,6 +276,7 @@ void OnkyoRemote::setVolume() {
   qDebug() << __PRETTY_FUNCTION__ << masterVolume;
   volumeSlider->setValue(masterVolume);
   volumeSlider->setToolTip(QString::number(masterVolume));
+  setTemporaryDisplay(QString("Volume: %1").arg(masterVolume));
 }
 
 void OnkyoRemote::volumeSliderMoved(int value) {

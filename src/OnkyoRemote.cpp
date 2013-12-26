@@ -259,6 +259,7 @@ void OnkyoRemote::setPreset(const QString& text) {
 void OnkyoRemote::setVolume() {
   qDebug() << __PRETTY_FUNCTION__ << masterVolume;
   volumeSlider->setValue(masterVolume);
+  volumeSlider->setToolTip(QString::number(masterVolume));
 }
 
 void OnkyoRemote::volumeSliderMoved(int value) {

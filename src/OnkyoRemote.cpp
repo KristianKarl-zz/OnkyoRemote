@@ -186,7 +186,7 @@ void OnkyoRemote::radioDown() {
 void OnkyoRemote::connected() {
   qDebug() <<  __PRETTY_FUNCTION__;
   connectLabel->setText(QString("Connected to %1, at %2").arg(network->getDevice()->model).arg(network->getDevice()->addr.toString()));
-  connectLabel->setStyleSheet("background-color: green;");
+  connectLabel->setStyleSheet("background-color: lightgreen;");
   getInitialStatus();
 }
 

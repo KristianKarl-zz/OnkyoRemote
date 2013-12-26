@@ -11,11 +11,6 @@
 
 #include "Network.h"
 
-#define CONNECT_STRING "Connect"
-#define CONNECTING_STRING "Connecting"
-#define DISCONNECTING_STRING "Disconnecting"
-#define CONNECTED_STRING "Connected"
-
 OnkyoRemote::OnkyoRemote() :
   muted(false),
   power(false),
@@ -47,11 +42,10 @@ OnkyoRemote::OnkyoRemote() :
   /*
    *  Connection
    */
-  connectBtn = new QPushButton(CONNECT_STRING);
-  connect(connectBtn, SIGNAL(clicked()), this, SLOT(changeConnectionStatus()));
-  connectBtn->setPalette(QPalette(Qt::red));
+  connectLabel = new QLabel("Searching for Onkyo receiver...");
+  connectLabel->setStyleSheet("qproperty-alignment: AlignCenter; background-color: red;");
   QHBoxLayout *connectedLayout = new QHBoxLayout;
-  connectedLayout->addWidget(connectBtn);
+  connectedLayout->addWidget(connectLabel);
 
   /*
    *  Volume
@@ -191,29 +185,15 @@ void OnkyoRemote::radioDown() {
 
 void OnkyoRemote::connected() {
   qDebug() <<  __PRETTY_FUNCTION__;
-  connectBtn->setText(QString("Connected to %1, at %2").arg(network->getDevice()->model).arg(network->getDevice()->addr.toString()));
-  connectBtn->setPalette(QPalette(Qt::green));
+  connectLabel->setText(QString("Connected to %1, at %2").arg(network->getDevice()->model).arg(network->getDevice()->addr.toString()));
+  connectLabel->setStyleSheet("background-color: green;");
   getInitialStatus();
 }
 
 void OnkyoRemote::disconnected() {
   qDebug() <<  __PRETTY_FUNCTION__;
-  connectBtn->setText(CONNECT_STRING);
-  connectBtn->setPalette(QPalette(Qt::red));
-}
-
-void OnkyoRemote::changeConnectionStatus() {
-  qDebug() << __PRETTY_FUNCTION__ << "Text: " << connectBtn->text();
-
-  if (!network->isConnected()) {
-    network->discover();
-    connectBtn->setText(CONNECTING_STRING);
-    connectBtn->setPalette(QPalette(Qt::yellow));
-  } else {
-    network->disconnect();
-    connectBtn->setText(DISCONNECTING_STRING);
-    connectBtn->setPalette(QPalette(Qt::yellow));
-  }
+  connectLabel->setText("Not connected to any Onkyo receiver");
+  connectLabel->setStyleSheet("background-color: red;");
 }
 
 void OnkyoRemote::cblSat() {

@@ -33,7 +33,6 @@ class OnkyoRemote : public QMainWindow {
      */
     void connected();
     void disconnected();
-    void changeConnectionStatus();
     void volumeUp();
     void volumeDown();
     void cblSat();
@@ -51,7 +50,7 @@ class OnkyoRemote : public QMainWindow {
 
   private:
     Network* network;
-    QPushButton *connectBtn;
+    QLabel *connectLabel;
     QLabel *displayText;
     QLabel *presetText;
     QSlider *volumeSlider;

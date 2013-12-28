@@ -13,4 +13,4 @@ QT4_ADD_RESOURCES(ONKYOREMOTE_RCC_SRCS src/OnkyoRemote.qrc)
 
 add_executable(OnkyoRemote ${SOURCE_FILES} ${MOC_SOURCE_FILES} ${ONKYOREMOTE_RCC_SRCS})
 target_link_libraries(OnkyoRemote ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTNETWORK_LIBRARY})
-
+install( TARGETS OnkyoRemote DESTINATION bin )

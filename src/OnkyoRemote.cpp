@@ -313,6 +313,10 @@ void OnkyoRemote::filterMessage(QString message) {
   } else if (message.startsWith("NST")) {
     //playSettings(message.split("NST")[1]);
   } else if (message.startsWith("NLS")) {
+    if (message.contains("No Item")) {
+      qDebug() << __PRETTY_FUNCTION__ << "No items, exiting";
+      return;
+    }
     handleList(message.split("NLS")[1]);
   } else if (message.startsWith("NKY")) {
     //waitInput(message.split("NKY")[1]);

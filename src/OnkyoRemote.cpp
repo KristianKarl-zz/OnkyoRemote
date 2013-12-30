@@ -88,6 +88,10 @@ OnkyoRemote::OnkyoRemote() :
   pcBtn->setCheckable(true);
   connect(pcBtn, SIGNAL(clicked()), this, SLOT(pc()));
 
+  netBtn = new QPushButton("NET");
+  netBtn->setCheckable(true);
+  connect(netBtn, SIGNAL(clicked()), this, SLOT(net()));
+
   QButtonGroup *btnGroup = new QButtonGroup();
   btnGroup->setExclusive(true);
   btnGroup->addButton(gameBtn);
@@ -95,6 +99,7 @@ OnkyoRemote::OnkyoRemote() :
   btnGroup->addButton(radioBtn);
   btnGroup->addButton(spotifyBtn);
   btnGroup->addButton(pcBtn);
+  btnGroup->addButton(netBtn);
 
   QHBoxLayout *inputSelectorLayout = new QHBoxLayout;
   inputSelectorLayout->addWidget(gameBtn);
@@ -102,6 +107,7 @@ OnkyoRemote::OnkyoRemote() :
   inputSelectorLayout->addWidget(radioBtn);
   inputSelectorLayout->addWidget(spotifyBtn);
   inputSelectorLayout->addWidget(pcBtn);
+  inputSelectorLayout->addWidget(netBtn);
 
   /*
    *  Radio
@@ -229,6 +235,11 @@ void OnkyoRemote::pc() {
   network->command("SLI05");
 }
 
+void OnkyoRemote::net() {
+  qDebug() <<  __PRETTY_FUNCTION__;
+  network->command("SLI2B");
+}
+
 void OnkyoRemote::setDisplay(const QString& text) {
   qDebug() <<  __PRETTY_FUNCTION__ << text;
   displayText->setText(text);
@@ -302,6 +313,7 @@ void OnkyoRemote::filterMessage(QString message) {
     artist = message.split("NAT")[1];
   } else if (message.startsWith("NTI")) {
     songName = message.split("NTI")[1];
+    setPreset(songName);
   } else if (message.startsWith("SLI")) {
     inputSelected = message.split("SLI")[1].toInt();
     setInputSelection();
@@ -321,7 +333,7 @@ void OnkyoRemote::filterMessage(QString message) {
   } else if (message.startsWith("NKY")) {
     //waitInput(message.split("NKY")[1]);
   } else if (message.startsWith("NJA")) {
-    //mainForm.netPlay.makeJacketArt(Arrays.copyOfRange(statusBytes, 3, statusBytes.length));
+    makeJacketArt(message.split("NJA")[1]);
   } else if (message.startsWith("NTR")) {
     //listSizeData(message.split("NTR")[1]);
   } else if (message.startsWith("SWL")) {
@@ -332,7 +344,7 @@ void OnkyoRemote::filterMessage(QString message) {
     //trebleLevel = getTrebleData(message.split("TFR")[1]);
     //subLevel = getSubData(message.split("TFR")[1]);
   } else if (message.startsWith("NLT")) {
-    handlePlayList(message.split("NLT")[1]);
+    handleNetMessage(message.split("NLT")[1]);
   }
 }
 
@@ -359,6 +371,150 @@ void OnkyoRemote::setInputSelection() {
     case 28:
       emit setDisplay("Spotify");
       break;
+  }
+}
+
+void OnkyoRemote::handleNetMessage(QString line) {
+  qDebug() <<  __PRETTY_FUNCTION__ << line;
+
+  netBtn->setChecked(true);
+
+  // DLNA
+  if (line.startsWith("00")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "DLNA";
+  }
+  // Favorite
+  else if (line.startsWith("01")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "Favorit";
+  }
+  // vTuner
+  else if (line.startsWith("02")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "vTuner";
+    setDisplay("vTuner");
+
+    // UI Type
+    if (line[2] == '0') {
+      qDebug() <<  __PRETTY_FUNCTION__ << "List";
+    } else if (line[2] == '1') {
+      qDebug() <<  __PRETTY_FUNCTION__ << "Menu";
+    } else if (line[2] == '2') {
+      qDebug() <<  __PRETTY_FUNCTION__ << "Playback";
+    } else if (line[2] == '3') {
+      qDebug() <<  __PRETTY_FUNCTION__ << "Popup";
+    } else if (line[2] == '4') {
+      qDebug() <<  __PRETTY_FUNCTION__ << "Keyboard";
+    } else if (line[2] == '5') {
+      qDebug() <<  __PRETTY_FUNCTION__ << "Menu List";
+    } else {
+      qWarning() <<  __PRETTY_FUNCTION__ << "Unsupported UI Type";
+    }
+
+    // Layer Info
+    if (line[3] == '0') {
+      qDebug() <<  __PRETTY_FUNCTION__ << "NET TOP";
+    } else if (line[3] == '1') {
+      qDebug() <<  __PRETTY_FUNCTION__ << "Service Top,DLNA/USB/iPod Top";
+    } else if (line[3] == '2') {
+      qDebug() <<  __PRETTY_FUNCTION__ << "under 2nd Layer";
+    } else {
+      qWarning() <<  __PRETTY_FUNCTION__ << "Unsupported Layer info";
+    }
+
+    // Current cursor position
+    qDebug() <<  __PRETTY_FUNCTION__ << "Current cursor position: " + line.mid(4 ,4);
+
+    // Number of list items
+    qDebug() <<  __PRETTY_FUNCTION__ << "Number of list items: " + line.mid(8 ,4);
+
+    // Numberof of layers
+    qDebug() <<  __PRETTY_FUNCTION__ << "Number of layers: " + line.mid(12 ,2);
+
+    // Reserved
+    qDebug() <<  __PRETTY_FUNCTION__ << "Reserved: " + line.mid(14 ,2);
+
+    // Icon left of Title Bar
+    qDebug() <<  __PRETTY_FUNCTION__ << "Icon left of Title Bar: " + line.mid(16 ,2);
+
+    // Icon type?
+    qDebug() <<  __PRETTY_FUNCTION__ << "Icon Icon type?: " + line.mid(18 ,2);
+
+    // Icon right of Title Bar
+    qDebug() <<  __PRETTY_FUNCTION__ << "Icon right of Title Bar: " + line.mid(20 ,2);
+
+    // Icon type?
+    qDebug() <<  __PRETTY_FUNCTION__ << "Icon Icon type?: " + line.mid(22 ,2);
+
+    // Status info
+    qDebug() <<  __PRETTY_FUNCTION__ << "Status info: " + line.mid(24 ,2);
+
+    // Status info type?
+    qDebug() <<  __PRETTY_FUNCTION__ << "Status info type?: " + line.mid(26 ,2);
+    
+    // Character of Title Bar 
+    qDebug() <<  __PRETTY_FUNCTION__ << "Character of Title Bar: " + line.mid(28);
+  }
+  // SiriusXM
+  else if (line.startsWith("03")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "SiriusXM";
+  }
+  // Pandora
+  else if (line.startsWith("04")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "Pandora";
+  }
+  // Rhapsody
+  else if (line.startsWith("05")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "Rhapsody";
+  }
+  // Last.fm
+  else if (line.startsWith("06")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "Last.fm";
+  }
+  // Napster
+  else if (line.startsWith("07")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "Napster";
+  }
+  // Slacker
+  else if (line.startsWith("08")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "Slacker";
+  }
+  // Mediafly
+  else if (line.startsWith("09")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "Mediafly";
+  }
+  // Spotify
+  else if (line.startsWith("0A")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "Spotify";
+  }
+  // AUPEO!
+  else if (line.startsWith("0B")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "AUPEO!";
+  }
+  // radiko
+  else if (line.startsWith("0C")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "radiko";
+  }
+  // e-onkyo
+  else if (line.startsWith("0D")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "e-onkyo";
+  }
+  // TuneIn Radio
+  else if (line.startsWith("0E")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "TunIn Radio";
+  }
+  // MP3 Tunes
+  else if (line.startsWith("0F")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "MP3 Tunes";
+  }
+  // Simfy
+  else if (line.startsWith("10")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "Simfy";
+  }
+  // HomeMedia
+  else if (line.startsWith("11")) {
+    qDebug() <<  __PRETTY_FUNCTION__ << "HomeMedia";
+  }
+  else {
+    qWarning() <<  __PRETTY_FUNCTION__ << "Unsupported service type";
   }
 }
 
@@ -432,4 +588,8 @@ void OnkyoRemote::initListView() {
   listViewdata.append("-");
   listViewdata.append("-");
   listViewdata.append("-");
+}
+
+void OnkyoRemote::makeJacketArt(QString jacketArtStr) {
+  qDebug() <<  __PRETTY_FUNCTION__ + jacketArtStr;
 }

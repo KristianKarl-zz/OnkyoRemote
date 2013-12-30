@@ -40,13 +40,16 @@ class OnkyoRemote : public QMainWindow {
     void radio();
     void spotify();
     void pc();
+    void net();
     void radioUp();
     void radioDown();
 
   private:
+    void handleNetMessage(QString);
     void handleList(QString);
     void initListView();
     void handlePlayList(QString);
+    void makeJacketArt(QString);
 
   private:
     Network* network;
@@ -60,6 +63,7 @@ class OnkyoRemote : public QMainWindow {
     QPushButton *radioBtn;
     QPushButton *spotifyBtn;
     QPushButton *pcBtn;
+    QPushButton *netBtn;
 
     // Status
   private:

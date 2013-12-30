@@ -49,7 +49,7 @@ QString Network::readData() {
     ) {
       curr_status.reset(0);
       tcp.abort();
-      qDebug() <<  __PRETTY_FUNCTION__ << "Bad ISCP format message";
+      qWarning() <<  __PRETTY_FUNCTION__ << "Bad ISCP format message";
       return "";
     }
 

@@ -1,5 +1,7 @@
 # OnkyoRemote
 
+[![Build Status](https://travis-ci.org/KristianKarl/OnkyoRemote.png)](https://travis-ci.org/KristianKarl/OnkyoRemote)
+
 This is a small hack I did to remote control my Onkyo TX-NR609.
 I re-used code from Simon Aldrich's blog at http://simon.aldrich.eu/blog/tag/iscp/
 
